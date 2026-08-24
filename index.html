@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outil d'audit de performance - EK Development</title>
+  <style>
+    :root {
+      --paper: #ffffff;
+      --paper-warm: #fcfcf9;
+      --fg: #111111;
+      --fg-muted: #666666;
+      --fg-accent: #0055ff;
+      --line: #eeeeee;
+      --line-strong: #cccccc;
+      --muted-strong: #555555;
+      
+      --score-high: #0cce6b;
+      --score-mid: #ffa400;
+      --score-low: #ff4e42;
+
+      --sp-2: 0.5rem;
+      --sp-3: 1rem;
+      --sp-4: 1.5rem;
+      --sp-5: 2.5rem;
+      --sp-6: 4rem;
+      --sp-7: 6rem;
+      
+      --fs-display: 2.5rem;
+      --fs-title: 1.5rem;
+      --fs-small: 0.875rem;
+      
+      --lh-display: 1.1;
+      --lh-title: 1.2;
+      
+      --font-display: sans-serif;
+      --font-mono: monospace;
+      --wght-display: 700;
+    }
+    
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: var(--paper);
+      color: var(--fg);
+    }
+    
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .eyebrow {
+      font-size: var(--fs-small);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--fg-muted);
+      margin-bottom: var(--sp-2);
+    }
+    
+    .muted {
+      color: var(--fg-muted);
+    }
+
+    .btn {
+      background: var(--fg);
+      color: var(--paper);
+      border: 1px solid var(--fg);
+      padding: 0.9em 1.5em;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      background: var(--fg-accent);
+      border-color: var(--fg-accent);
+    }
+    .btn--ghost {
+      background: transparent;
+      color: var(--fg);
+    }
+    .btn--ghost:hover {
+      color: var(--fg-accent);
+      border-color: var(--fg-accent);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Extracted specific styles */
+    .a-head { padding-block: var(--sp-6) var(--sp-5); }
+    .a-head h1 { font-size: var(--fs-display); line-height: var(--lh-display); margin: 0; }
+    .a-tech { margin-block-start: var(--sp-3); }
+    .a-tool { padding-block-start: var(--sp-2); }
+    
+    .a-frame {
+      background: var(--paper-warm);
+      padding: var(--sp-6) clamp(var(--sp-4), 4vw, var(--sp-7));
+      min-block-size: 340px;
+    }
+    .a-form { display: grid; gap: var(--sp-3); max-inline-size: 620px; }
+    .a-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+    .a-row input {
+      flex: 1 1 280px;
+      padding: 0.9em 1em;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      font: inherit;
+      color: var(--fg);
+    }
+    .a-row input:focus-visible { outline: 2px solid var(--fg-accent); outline-offset: 2px; }
+    .a-help { font-size: var(--fs-small); max-width: 52ch; }
+
+    .a-running { display: grid; gap: var(--sp-4); max-inline-size: 620px; }
+    .a-clock b, .a-clock span { font-variant-numeric: tabular-nums; font-weight: bold; }
+    .a-steps { display: grid; gap: var(--sp-3); padding-inline-start: 0; list-style: none; counter-reset: step; }
+    .a-steps li { position: relative; padding-inline-start: 2.2rem; color: var(--fg-muted); }
+    .a-steps li::before {
+      content: ''; position: absolute; left: 0; top: 0.3em; width: 0.95rem; height: 0.95rem;
+      border: 1px solid var(--line-strong); border-radius: 50%;
+    }
+    .a-steps li[data-step='active'] { color: var(--fg); }
+    .a-steps li[data-step='active']::before { border-color: var(--fg); animation: a-pulse 1.2s ease-in-out infinite; }
+    .a-steps li[data-step='done'] { color: var(--fg); }
+    .a-steps li[data-step='done']::before { background: var(--fg); border-color: var(--fg); }
+    
+    @keyframes a-pulse { 50% { background: var(--fg); } }
+
+    .audit-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4); flex-wrap: wrap; margin-block-end: var(--sp-5); }
+    .audit-toggle { display: inline-flex; border: 1px solid var(--line-strong); }
+    .audit-toggle button { font: inherit; font-size: var(--fs-small); padding: 0.45em 1.1em; background: transparent; border: 0; color: var(--fg-muted); cursor: pointer; }
+    .audit-toggle button[aria-pressed='true'] { background: var(--fg); color: var(--paper); }
+    
+    .audit-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-6); }
+    .audit-col h3 { font-size: var(--fs-title); line-height: var(--lh-title); margin: 0 0 1rem 0; }
+    .audit-sub { color: var(--fg-accent); margin-block-start: 0.4em; }
+    
+    .audit-gauge { display: flex; align-items: center; gap: var(--sp-4); margin-block: var(--sp-4); margin-left: 0; }
+    .audit-gauge svg { width: 116px; height: 116px; transform: rotate(-90deg); }
+    .gauge-track, .gauge-arc { fill: none; stroke-width: 10; stroke-linecap: round; }
+    .gauge-track { stroke: var(--line); }
+    .audit-gauge[data-tier='low'] .gauge-arc { stroke: var(--score-low); }
+    .audit-gauge[data-tier='mid'] .gauge-arc { stroke: var(--score-mid); }
+    .audit-gauge[data-tier='high'] .gauge-arc { stroke: var(--score-high); }
+    .audit-gauge figcaption { display: grid; gap: 0.2em; }
+    .audit-gauge b { font-family: var(--font-display); font-weight: var(--wght-display); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+    .audit-gauge span { font-size: var(--fs-small); color: var(--fg-muted); }
+    
+    .audit-subscores { margin-block-end: var(--sp-4); }
+    .audit-metrics { display: grid; gap: var(--sp-2); margin: 0; }
+    .audit-metric { display: flex; justify-content: space-between; gap: var(--sp-3); padding-block: var(--sp-2); border-block-start: 1px solid var(--line); }
+    .audit-metric dt small { display: block; color: var(--fg-muted); font-size: 0.78em; }
+    .audit-metric dd { margin: 0; font-weight: 500; white-space: nowrap; }
+    .audit-metric[data-tier='low'] dd { color: var(--score-low); }
+    .audit-metric[data-tier='high'] dd { color: var(--score-high); }
+    
+    .audit-opportunities { margin-block-start: var(--sp-6); max-inline-size: 640px; }
+    .audit-opportunities h3 { font-size: var(--fs-title); margin-block-end: var(--sp-3); }
+    .audit-opportunities ol { display: grid; gap: var(--sp-2); padding-inline-start: 1.2em; }
+    .audit-opportunities b { color: var(--fg-muted); font-weight: 500; white-space: nowrap; }
+    
+    .audit-cta { margin-block-start: var(--sp-6); padding-block-start: var(--sp-5); border-block-start: 1px solid var(--line-strong); max-inline-size: 620px; display: grid; gap: var(--sp-3); }
+    .audit-again { margin-block-start: var(--sp-5); }
+    
+    .link-arrow { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-decoration: underline; color: var(--fg); }
+    
+    .a-error { display: grid; gap: var(--sp-3); max-inline-size: 560px; }
+    .a-honest { margin-block-start: var(--sp-4); font-size: var(--fs-small); max-width: 68ch; }
+
+    @media (width < 820px) {
+      .audit-compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="a-head">
+      <h1>Audit de performance</h1>
+      <p class="a-tech eyebrow">Outil de mesure 100% côté client (Clé API directe)</p>
+    </section>
+
+    <section class="a-tool">
+      <div class="a-frame" data-audit>
+        
+        <!-- 1 Saisie -->
+        <div data-audit-idle>
+          <form class="a-form" data-audit-form>
+            <label class="eyebrow" for="audit-url">L’adresse du site à mesurer</label>
+            <div class="a-row">
+              <input id="audit-url" data-audit-input type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://votre-site.fr" required />
+            </div>
+            <label class="eyebrow" for="audit-key">Clé API PageSpeed Insights (Google)</label>
+            <div class="a-row">
+              <input id="audit-key" data-audit-key type="password" placeholder="AIzaSy..." required />
+              <button class="btn" type="submit">Mesurer</button>
+            </div>
+            <p class="a-help muted">
+              Aucune donnée, ni votre clé API, n'est envoyée à notre serveur. Les mesures sont effectuées en contactant directement Google.
+            </p>
+          </form>
+        </div>
+
+        <!-- 2 Analyse -->
+        <div data-audit-running hidden>
+          <div class="a-running">
+            <p class="a-clock eyebrow" aria-hidden="true">
+              <span data-audit-clock>00:00</span> — temps réel écoulé
+            </p>
+            <ol class="a-steps" data-audit-steps>
+              <li>Requête envoyée à l’outil de mesure</li>
+              <li>Chargement et mesure de la page (Mobile + Desktop)</li>
+              <li>Réception et lecture des résultats</li>
+            </ol>
+            <p><button type="button" class="link-arrow" data-audit-cancel>Annuler</button></p>
+          </div>
+        </div>
+
+        <!-- 3 Résultat -->
+        <div data-audit-result aria-live="polite" hidden></div>
+
+        <!-- 4 Erreur -->
+        <div data-audit-error role="alert" hidden>
+          <div class="a-error">
+            <p class="eyebrow"><b>—</b> Mesure impossible</p>
+            <p data-audit-error-msg></p>
+            <p>
+              <button type="button" class="btn btn--ghost" data-audit-retry>Réessayer</button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
