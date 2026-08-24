@@ -238,7 +238,7 @@ export function mountAudit() {
     const t0 = performance.now();
     clockTimer = setInterval(() => {
       const s = Math.floor((performance.now() - t0) / 1000);
-      clockEl.textContent = \`\${String(Math.floor(s / 60)).padStart(2, '0')}:\${String(s % 60).padStart(2, '0')}\`;
+      clockEl.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
     }, 1000);
   }
   function stopClock() {
@@ -284,28 +284,28 @@ export function mountAudit() {
     const when = 'Analyse à l’instant.';
 
     const opportunities = (mine?.opportunities ?? [])
-      .map((o) => \`<li>\${esc(o.title)} <b>\${fmtSavings(o.savingsMs)}</b></li>\`)
+      .map((o) => `<li>${esc(o.title)} <b>${fmtSavings(o.savingsMs)}</b></li>`)
       .join('');
 
-    states.result.innerHTML = \`
+    states.result.innerHTML = `
       <header class="audit-head">
-        <p class="eyebrow"><b>\${esc(host)}</b> — \${esc(when)}</p>
+        <p class="eyebrow"><b>${esc(host)}</b> — ${esc(when)}</p>
         <div class="audit-toggle" role="group" aria-label="Type d'appareil mesuré">
-          <button type="button" data-strategy="mobile" aria-pressed="\${strategy === 'mobile'}">Mobile</button>
-          <button type="button" data-strategy="desktop" aria-pressed="\${strategy === 'desktop'}">Desktop</button>
+          <button type="button" data-strategy="mobile" aria-pressed="${strategy === 'mobile'}">Mobile</button>
+          <button type="button" data-strategy="desktop" aria-pressed="${strategy === 'desktop'}">Desktop</button>
         </div>
       </header>
       <div class="audit-compare">
-        \${columnHTML('Votre site', mine)}
+        ${columnHTML('Votre site', mine)}
       </div>
-      \${
+      ${
         opportunities
-          ? \`<div class="audit-opportunities"><h3>Par où commencer</h3><ol>\${opportunities}</ol></div>\`
+          ? `<div class="audit-opportunities"><h3>Par où commencer</h3><ol>${opportunities}</ol></div>`
           : ''
       }
-      <div class="audit-cta">\${mine ? ctaHTML(mine.performance, auditedUrl) : ''}</div>
+      <div class="audit-cta">${mine ? ctaHTML(mine.performance, auditedUrl) : ''}</div>
       <p class="audit-again"><button type="button" class="link-arrow" data-audit-again>Mesurer un autre site</button></p>
-    \`;
+    `;
     show('result');
     animateGauges(states.result);
 
